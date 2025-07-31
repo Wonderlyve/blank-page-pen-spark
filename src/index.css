@@ -2,18 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    
-    /* Typography */
-    --text-primary: 0 0% 0%;
-    --text-secondary: 0 0% 40%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -105,5 +97,21 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    /* Force mobile layout on mobile devices */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  /* Ensure mobile-first responsive behavior */
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px; /* Prevent zoom on form inputs */
+    }
+    
+    body {
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
