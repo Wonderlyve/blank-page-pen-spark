@@ -166,20 +166,18 @@ const BriefPlayer = () => {
           />
           
           {/* Play/Pause Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={togglePlay}
-              className="w-20 h-20 bg-black/30 hover:bg-black/50 text-white rounded-full opacity-0 hover:opacity-100 transition-opacity"
-            >
-              {isPlaying ? (
-                <Pause className="w-10 h-10" />
-              ) : (
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={togglePlay}
+                className="w-20 h-20 bg-black/30 hover:bg-black/50 text-white rounded-full opacity-0 hover:opacity-100 transition-opacity"
+              >
                 <Play className="w-10 h-10 ml-1" />
-              )}
-            </Button>
-          </div>
+              </Button>
+            </div>
+          )}
 
           {/* Video Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
