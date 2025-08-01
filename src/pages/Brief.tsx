@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Play, Eye, Heart, ArrowLeft } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Play, Eye, Heart, ArrowLeft, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import BottomNavigation from '@/components/BottomNavigation';
 import DebriefingModal from '@/components/channel-chat/DebriefingModal';
 import LoadingModal from '@/components/LoadingModal';
@@ -15,6 +16,7 @@ const Brief = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { debriefings, loading, createPublicBrief, fetchPublicDebriefings } = useDebriefings(null);
 
   useEffect(() => {
@@ -36,6 +38,16 @@ const Brief = () => {
       setShowSuccessModal(true);
     }
   };
+
+  // Filtered debriefings based on search query
+  const filteredDebriefings = useMemo(() => {
+    if (!searchQuery) return debriefings;
+    
+    return debriefings.filter(brief => 
+      brief.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      brief.creator_username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [debriefings, searchQuery]);
 
   const formatViews = (views: number) => {
     if (views >= 1000000) {
@@ -63,8 +75,22 @@ const Brief = () => {
             <h1 className="text-xl font-bold text-gray-900">Brief</h1>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <span>{debriefings.length} vidéos</span>
+            <span>{filteredDebriefings.length} vidéo{filteredDebriefings.length > 1 ? 's' : ''}</span>
           </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            type="text"
+            placeholder="Rechercher par titre ou auteur..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-gray-50 border-0 focus:bg-white"
+          />
         </div>
       </div>
 
@@ -87,20 +113,26 @@ const Brief = () => {
               </Card>
             ))}
           </div>
-        ) : debriefings.length === 0 ? (
+        ) : filteredDebriefings.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Play className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun brief disponible</h3>
-            <p className="text-gray-500 mb-6">Soyez le premier à publier un brief !</p>
-            <Button onClick={() => setShowCreateModal(true)}>
-              Créer mon premier brief
-            </Button>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchQuery ? 'Aucun résultat trouvé' : 'Aucun brief disponible'}
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {searchQuery ? `Aucun brief trouvé pour "${searchQuery}"` : 'Soyez le premier à publier un brief !'}
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setShowCreateModal(true)}>
+                Créer mon premier brief
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
-            {debriefings.map((brief) => (
+            {filteredDebriefings.map((brief) => (
               <Card key={brief.id} className="overflow-hidden border-0 shadow-sm">
                 <div 
                   className="cursor-pointer"

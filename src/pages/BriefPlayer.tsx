@@ -46,27 +46,46 @@ const BriefPlayer = () => {
     }
   }, [briefData, navigate, debriefings.length]);
 
-  // Video controls
+  // Video controls and autoplay
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
+      // Auto-play the video when metadata is loaded
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch((error) => {
+        console.log('Autoplay failed:', error);
+        // Autoplay failed, user will need to click play
+      });
     };
 
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
     };
 
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
     };
-  }, []);
+  }, [briefData]);
 
   const togglePlay = () => {
     const video = videoRef.current;
