@@ -22,8 +22,11 @@ const BottomNavigation = () => {
   
   const handleCreateClick = () => {
     if (requireAuth()) {
-      // Créer un post si on est sur la page d'accueil, sinon créer un brief
-      if (location.pathname === '/') {
+      // Créer un canal si on est sur la page channels, un post si on est sur l'accueil, sinon un brief
+      if (location.pathname === '/channels') {
+        // Trigger channel creation - we'll emit a custom event
+        window.dispatchEvent(new CustomEvent('createChannel'));
+      } else if (location.pathname === '/') {
         setShowCreateModal(true);
       } else {
         setShowBriefModal(true);

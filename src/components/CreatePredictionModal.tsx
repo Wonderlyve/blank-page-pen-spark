@@ -20,6 +20,7 @@ interface Match {
   odds: string;
   league: string;
   time: string;
+  betType: string;
 }
 
 interface CreatePredictionModalProps {
@@ -31,8 +32,9 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   const { createPost } = useOptimizedPosts();
   
   const [betType, setBetType] = useState<'simple' | 'combine' | 'loto'>('simple');
+  const [predictionBetType, setPredictionBetType] = useState<string>('1X2');
   const [matches, setMatches] = useState<Match[]>([
-    { id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }
+    { id: 1, teams: '', prediction: '', odds: '', league: '', time: '', betType: '1X2' }
   ]);
   const [analysis, setAnalysis] = useState('');
   const [confidence, setConfidence] = useState(3);
@@ -52,7 +54,8 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
       prediction: '',
       odds: '',
       league: '',
-      time: ''
+      time: '',
+      betType: '1X2'
     };
     setMatches([...matches, newMatch]);
   };
@@ -121,7 +124,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
           confidence,
           odds: totalOdds,
           reservation_code: reservationCode || null,
-          bet_type: betType,
+          bet_type: predictionBetType,
           matches_data: matchesData ? JSON.stringify(matchesData) : null,
           image_file: selectedImage,
           video_file: selectedVideo
@@ -146,7 +149,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   };
 
   const resetForm = () => {
-    setMatches([{ id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }]);
+    setMatches([{ id: 1, teams: '', prediction: '', odds: '', league: '', time: '', betType: '1X2' }]);
     setAnalysis('');
     setConfidence(3);
     setSport('');
@@ -234,16 +237,39 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               )}
 
               {betType !== 'loto' && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Sport / Compétition
-                  </label>
-                  <Input
-                    placeholder="Ex: Football, Tennis, Basketball..."
-                    value={sport}
-                    onChange={(e) => setSport(e.target.value)}
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Sport / Compétition
+                    </label>
+                    <Input
+                      placeholder="Ex: Football, Tennis, Basketball..."
+                      value={sport}
+                      onChange={(e) => setSport(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Type de pari
+                    </label>
+                    <Select value={predictionBetType} onValueChange={setPredictionBetType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1X2">1X2</SelectItem>
+                        <SelectItem value="Double Chance">Double Chance</SelectItem>
+                        <SelectItem value="But">But</SelectItem>
+                        <SelectItem value="Corner">Corner</SelectItem>
+                        <SelectItem value="Carton">Carton</SelectItem>
+                        <SelectItem value="Mi-temps">Mi-temps</SelectItem>
+                        <SelectItem value="Handicap">Handicap</SelectItem>
+                        <SelectItem value="Plus/Moins">Plus/Moins</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
 
               {betType === 'combine' && (
@@ -277,70 +303,153 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                     )}
                   </div>
                   
-                  {/* Affichage en liste verticale pour les paris combinés */}
-                  <div className="space-y-3">
-                    {matches.map((match, index) => (
-                      <Card key={match.id} className="p-3">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">
-                              {betType === 'combine' ? `Match ${index + 1}` : 'Match'}
-                            </span>
-                            {betType === 'combine' && matches.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeMatch(match.id)}
-                                className="text-red-500 p-1 h-auto"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Input
-                              placeholder="Équipes (ex: PSG vs Real Madrid)"
-                              value={match.teams}
-                              onChange={(e) => updateMatch(match.id, 'teams', e.target.value)}
-                              className="text-sm"
-                            />
-                            
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input
-                                placeholder="Compétition"
-                                value={match.league}
-                                onChange={(e) => updateMatch(match.id, 'league', e.target.value)}
-                                className="text-sm"
-                              />
-                              <Input
-                                placeholder="Heure"
-                                value={match.time}
-                                onChange={(e) => updateMatch(match.id, 'time', e.target.value)}
-                                className="text-sm"
-                              />
-                            </div>
-                            
-                            <Input
-                              placeholder="Votre pronostic (ex: Victoire PSG)"
-                              value={match.prediction}
-                              onChange={(e) => updateMatch(match.id, 'prediction', e.target.value)}
-                              className="text-sm"
-                            />
-                            
-                            <Input
-                              placeholder="Cote (ex: 2.10)"
-                              value={match.odds}
-                              onChange={(e) => updateMatch(match.id, 'odds', e.target.value)}
-                              type="number"
-                              step="0.01"
-                              className="text-sm"
-                            />
-                          </div>
+                  {/* Interface optimisée pour la création de matchs */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                    {/* Formulaire d'ajout de match */}
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Équipe 1"
+                          value=""
+                          className="text-sm"
+                        />
+                        <Input
+                          placeholder="Équipe 2"
+                          value=""
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Compétition"
+                          className="text-sm"
+                        />
+                        <Input
+                          placeholder="Heure (ex: 20:00)"
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select>
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Type de pari" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1X2">1X2</SelectItem>
+                            <SelectItem value="Double Chance">Double Chance</SelectItem>
+                            <SelectItem value="But">But</SelectItem>
+                            <SelectItem value="Corner">Corner</SelectItem>
+                            <SelectItem value="Carton">Carton</SelectItem>
+                            <SelectItem value="Mi-temps">Mi-temps</SelectItem>
+                            <SelectItem value="Handicap">Handicap</SelectItem>
+                            <SelectItem value="Plus/Moins">Plus/Moins</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Input
+                          placeholder="Pronostic"
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <Input
+                        placeholder="Cote (ex: 2.10)"
+                        type="number"
+                        step="0.01"
+                        className="text-sm"
+                      />
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter ce match
+                      </Button>
+                    </div>
+                    
+                    {/* Liste des matchs ajoutés */}
+                    {matches.length > 0 && matches[0].teams && (
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium text-gray-700">Matchs sélectionnés:</h5>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200 bg-white rounded-lg border">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Match
+                                </th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Type
+                                </th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Pronostic
+                                </th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Cote
+                                </th>
+                                {betType === 'combine' && (
+                                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                                    Actions
+                                  </th>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {matches.map((match, index) => (
+                                match.teams && (
+                                  <tr key={match.id} className="hover:bg-gray-50">
+                                    <td className="px-3 py-2">
+                                      <div className="text-sm">
+                                        <div className="font-medium">{match.teams}</div>
+                                        {match.league && (
+                                          <div className="text-xs text-gray-500">
+                                            {match.league} • {match.time}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                        {match.betType}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                                        {match.prediction}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <span className="text-sm font-bold text-green-600">
+                                        {match.odds}
+                                      </span>
+                                    </td>
+                                    {betType === 'combine' && (
+                                      <td className="px-3 py-2 text-center">
+                                        {matches.length > 1 && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeMatch(match.id)}
+                                            className="text-red-500 p-1 h-auto hover:bg-red-50"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </td>
+                                    )}
+                                  </tr>
+                                )
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      </Card>
-                    ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
