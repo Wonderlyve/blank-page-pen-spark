@@ -77,55 +77,50 @@ const PredictionModal = ({ prediction }: PredictionModalProps) => {
 
         {/* Tableau des matchs */}
         <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="bg-gray-100 px-6 py-3 text-sm font-medium text-gray-700">
+          <div className="bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
             {isMultipleBet ? `${matches.length} matchs sélectionnés` : 'Match sélectionné'}
           </div>
           
-          <div className="space-y-0">
+          <div className="divide-y divide-gray-200">
             {matches.map((match, index) => (
-              <div key={match.id}>
-                <div className="px-6 py-4">
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* Équipes */}
-                    <div className="col-span-4">
-                      <div className="font-medium text-gray-900 text-sm leading-tight">{match.teams}</div>
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <Trophy className="w-3 h-3 mr-1" />
-                        <span className="text-xs truncate">{match.league}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Heure */}
-                    <div className="col-span-2 text-center">
-                      <div className="flex items-center justify-center text-gray-600">
-                        <Clock className="w-3 h-3 mr-1" />
-                        <span className="font-medium text-sm">{match.time}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Type de pari */}
-                    <div className="col-span-2 text-center">
-                      <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                        {match.betType || '1X2'}
-                      </span>
-                    </div>
-                    
-                    {/* Pronostic */}
-                    <div className="col-span-2 text-center">
-                      <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                        {match.prediction}
-                      </span>
-                    </div>
-                    
-                    {/* Côte */}
-                    <div className="col-span-2 text-right">
-                      <span className="text-sm font-bold text-green-600">{match.odds}</span>
+              <div key={match.id} className="p-3">
+                <div className="grid grid-cols-12 gap-2 items-center text-xs">
+                  {/* Équipes */}
+                  <div className="col-span-4">
+                    <div className="font-medium text-gray-900 leading-tight">{match.teams}</div>
+                    <div className="flex items-center text-gray-500 mt-1">
+                      <Trophy className="w-3 h-3 mr-1" />
+                      <span className="truncate">{match.league}</span>
                     </div>
                   </div>
+                  
+                  {/* Heure */}
+                  <div className="col-span-2 text-center">
+                    <div className="flex items-center justify-center text-gray-600">
+                      <Clock className="w-3 h-3 mr-1" />
+                      <span className="font-medium">{match.time}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Type de pari */}
+                  <div className="col-span-2 text-center">
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      {match.betType || '1X2'}
+                    </span>
+                  </div>
+                  
+                  {/* Pronostic */}
+                  <div className="col-span-2 text-center">
+                    <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                      {match.prediction}
+                    </span>
+                  </div>
+                  
+                  {/* Côte */}
+                  <div className="col-span-2 text-right">
+                    <span className="text-sm font-bold text-green-600">{match.odds}</span>
+                  </div>
                 </div>
-                {index < matches.length - 1 && (
-                  <div className="border-t border-gray-100" />
-                )}
               </div>
             ))}
           </div>
