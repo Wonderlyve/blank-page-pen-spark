@@ -1,9 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Play, Eye, Heart, ArrowLeft, Search } from 'lucide-react';
+import { Play, Eye, Heart, ArrowLeft, Search, MoreVertical, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
 import BottomNavigation from '@/components/BottomNavigation';
 import DebriefingModal from '@/components/channel-chat/DebriefingModal';
 import LoadingModal from '@/components/LoadingModal';
@@ -17,7 +24,8 @@ const Brief = () => {
   const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { debriefings, loading, createPublicBrief, fetchPublicDebriefings } = useDebriefings(null);
+  const { debriefings, loading, createPublicBrief, fetchPublicDebriefings, deleteDebriefing } = useDebriefings(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchPublicDebriefings();
@@ -36,6 +44,20 @@ const Brief = () => {
     
     if (success) {
       setShowSuccessModal(true);
+    }
+  };
+
+  const handleDeleteBrief = async (briefId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce brief ?')) {
+      const success = await deleteDebriefing(briefId);
+      if (success) {
+        toast.success('Brief supprimé avec succès');
+        fetchPublicDebriefings();
+      } else {
+        toast.error('Erreur lors de la suppression');
+      }
     }
   };
 
@@ -159,7 +181,35 @@ const Brief = () => {
                       <div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center">
                         <Play className="w-8 h-8 text-white ml-1" />
                       </div>
-                    </div>
+                      </div>
+                    
+                    {/* Menu options pour l'auteur */}
+                    {user?.id === brief.creator_id && (
+                      <div className="absolute top-2 right-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 bg-black/60 text-white hover:bg-black/80"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => handleDeleteBrief(brief.id, e)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
+                    
                      {/* Stats overlay */}
                     <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs flex items-center space-x-3">
                       <div className="flex items-center space-x-1">

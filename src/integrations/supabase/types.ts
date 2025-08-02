@@ -529,6 +529,7 @@ export type Database = {
       posts: {
         Row: {
           analysis: string | null
+          bet_type: string | null
           comments: number | null
           confidence: number | null
           content: string
@@ -548,6 +549,7 @@ export type Database = {
         }
         Insert: {
           analysis?: string | null
+          bet_type?: string | null
           comments?: number | null
           confidence?: number | null
           content: string
@@ -567,6 +569,7 @@ export type Database = {
         }
         Update: {
           analysis?: string | null
+          bet_type?: string | null
           comments?: number | null
           confidence?: number | null
           content?: string
