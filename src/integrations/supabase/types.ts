@@ -351,7 +351,7 @@ export type Database = {
           thumbnail_url: string | null
           title: string
           updated_at: string
-          video_url: string
+          video_url: string | null
           views: number
         }
         Insert: {
@@ -367,7 +367,7 @@ export type Database = {
           thumbnail_url?: string | null
           title: string
           updated_at?: string
-          video_url: string
+          video_url?: string | null
           views?: number
         }
         Update: {
@@ -383,7 +383,7 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
-          video_url?: string
+          video_url?: string | null
           views?: number
         }
         Relationships: []
@@ -534,12 +534,14 @@ export type Database = {
           confidence: number | null
           content: string
           created_at: string
+          custom_username: string | null
           id: string
           image_url: string | null
           likes: number | null
           match_teams: string | null
           odds: number | null
           prediction_text: string | null
+          reservation_code: string | null
           shares: number | null
           sport: string | null
           updated_at: string
@@ -554,12 +556,14 @@ export type Database = {
           confidence?: number | null
           content: string
           created_at?: string
+          custom_username?: string | null
           id?: string
           image_url?: string | null
           likes?: number | null
           match_teams?: string | null
           odds?: number | null
           prediction_text?: string | null
+          reservation_code?: string | null
           shares?: number | null
           sport?: string | null
           updated_at?: string
@@ -574,12 +578,14 @@ export type Database = {
           confidence?: number | null
           content?: string
           created_at?: string
+          custom_username?: string | null
           id?: string
           image_url?: string | null
           likes?: number | null
           match_teams?: string | null
           odds?: number | null
           prediction_text?: string | null
+          reservation_code?: string | null
           shares?: number | null
           sport?: string | null
           updated_at?: string
