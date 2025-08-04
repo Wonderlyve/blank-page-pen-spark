@@ -22,6 +22,8 @@ import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
 import HelpSupport from "./pages/HelpSupport";
 import BulkPost from "./pages/BulkPost";
+import Update from "./pages/Update";
+import UpdateChecker from "./components/UpdateChecker";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient with proper configuration
@@ -41,6 +43,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <UpdateChecker />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -57,6 +60,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/help" element={<HelpSupport />} />
               <Route path="/bulk-post" element={<BulkPost />} />
+              <Route path="/update" element={<Update />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
