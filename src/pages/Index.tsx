@@ -10,7 +10,7 @@ import SideMenu from '@/components/SideMenu';
 import NotificationIcon from '@/components/NotificationIcon';
 import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PostSkeleton from '@/optimization/PostSkeleton';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,6 +26,10 @@ const Index = () => {
   const { posts, loading, initialLoading } = useOptimizedPosts();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Gérer l'affichage d'un post spécifique depuis une notification
+  const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
 
   // Charger les posts masqués et utilisateurs bloqués
   useEffect(() => {
@@ -58,6 +62,32 @@ const Index = () => {
 
     loadUserFilters();
   }, [user]);
+
+  // Gérer le paramètre post dans l'URL pour les notifications
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const postId = searchParams.get('post');
+    
+    if (postId) {
+      setHighlightedPostId(postId);
+      
+      // Faire défiler vers le post après un court délai
+      setTimeout(() => {
+        const element = document.getElementById(`post-${postId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+      
+      // Enlever le surlignage après 3 secondes
+      setTimeout(() => {
+        setHighlightedPostId(null);
+        // Nettoyer l'URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }, 3000);
+    }
+  }, [location.search]);
 
   const handleOpenModal = (data: any) => {
     // Modal handling logic if needed
@@ -300,11 +330,20 @@ const Index = () => {
           </div>
         ) : (
           filteredPosts.map((post) => (
-            <PredictionCard 
+            <div 
               key={post.id} 
-              prediction={transformPostToPrediction(post)} 
-              onOpenModal={handleOpenModal}
-            />
+              id={`post-${post.id}`}
+              className={`transition-all duration-1000 ${
+                highlightedPostId === post.id 
+                  ? 'ring-2 ring-blue-500 ring-opacity-75 shadow-lg' 
+                  : ''
+              }`}
+            >
+              <PredictionCard 
+                prediction={transformPostToPrediction(post)} 
+                onOpenModal={handleOpenModal}
+              />
+            </div>
           ))
         )}
 

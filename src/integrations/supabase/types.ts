@@ -469,6 +469,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          from_user_id: string | null
+          id: string
+          post_id: string | null
+          read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          post_id?: string | null
+          read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          post_id?: string | null
+          read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_likes: {
         Row: {
           created_at: string
