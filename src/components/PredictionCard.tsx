@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import PredictionModal from './PredictionModal';
-import MultipleBetViewModal from './MultipleBetViewModal';
 import ProtectedComponent from './ProtectedComponent';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -782,11 +781,7 @@ const PredictionCard = ({ prediction, onOpenModal }: PredictionCardProps) => {
                 <DialogHeader>
                   <DialogTitle>Pronostics de {prediction.user.username}</DialogTitle>
                 </DialogHeader>
-                {prediction.betType === 'multiple' ? (
-                  <MultipleBetViewModal prediction={prediction} />
-                ) : (
-                  <PredictionModal prediction={prediction} />
-                )}
+                <PredictionModal prediction={prediction} />
               </DialogContent>
             </Dialog>
           </ProtectedComponent>
