@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 import FileUpload from '@/components/FileUpload';
 import LoadingModal from '@/components/LoadingModal';
@@ -34,7 +35,7 @@ interface CreatePredictionModalProps {
 const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProps) => {
   const { createPost } = useOptimizedPosts();
   
-  const [betType, setBetType] = useState<'simple' | 'combine' | 'loto'>('simple');
+  const [betType, setBetType] = useState<'simple' | 'combine' | 'multiple' | 'loto'>('simple');
   const [matches, setMatches] = useState<Match[]>([
     { id: 1, team1: '', team2: '', prediction: '', odds: '', league: '', time: '', betType: '1X2' }
   ]);
@@ -114,7 +115,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   };
 
   const removeMatch = (id: number) => {
-    if (matches.length > 1) {
+    if (matches.length > 1 || betType === 'multiple') {
       setMatches(matches.filter(match => match.id !== id));
     }
   };
@@ -164,8 +165,8 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
 
         const totalOdds = betType === 'combine' ? parseFloat(calculateTotalOdds()) : parseFloat(validMatches[0].odds);
         
-        // Stocker les informations des matchs pour les paris combinés
-        const matchesData = betType === 'combine' ? validMatches : null;
+        // Stocker les informations des matchs pour les paris combinés et multiples
+        const matchesData = (betType === 'combine' || betType === 'multiple') ? validMatches : null;
         
         postData = {
           sport,
@@ -254,15 +255,16 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Type de pari
                 </label>
-                <Select value={betType} onValueChange={(value: 'simple' | 'combine' | 'loto') => setBetType(value)}>
+                <Select value={betType} onValueChange={(value: 'simple' | 'combine' | 'multiple' | 'loto') => setBetType(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="simple">Pari Simple</SelectItem>
-                    <SelectItem value="combine">Pari Combiné</SelectItem>
-                    <SelectItem value="loto">Pronostic Loto</SelectItem>
-                  </SelectContent>
+                   <SelectContent>
+                     <SelectItem value="simple">Pari Simple</SelectItem>
+                     <SelectItem value="combine">Pari Combiné</SelectItem>
+                     <SelectItem value="multiple">Paris Multiple</SelectItem>
+                     <SelectItem value="loto">Pronostic Loto</SelectItem>
+                   </SelectContent>
                 </Select>
               </div>
 
@@ -322,10 +324,21 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                 </div>
               )}
 
+              {betType === 'multiple' && matches.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-blue-800 text-sm">Total des matchs</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {matches.length} match{matches.length > 1 ? 'es' : ''}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {betType !== 'loto' && (
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    {betType === 'combine' ? 'Matchs du combiné' : 'Match'}
+                    {betType === 'combine' ? 'Matchs du combiné' : betType === 'multiple' ? 'Matchs du paris multiple' : 'Match'}
                   </label>
                   
                   {/* Formulaire d'ajout de match */}
@@ -459,45 +472,103 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                   {matches.length > 0 && (
                     <div className="space-y-2 mt-4">
                       <h5 className="text-sm font-medium text-gray-700">Matchs sélectionnés ({matches.length}):</h5>
-                      <div className="space-y-2">
-                        {matches.map((match) => (
-                          <Card key={match.id} className="p-3">
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">{match.team1} vs {match.team2}</div>
-                                  <div className="text-xs text-gray-500">
-                                    {match.league} • {match.time}
+                      
+                      {/* Affichage en tableau pour paris multiple */}
+                      {betType === 'multiple' ? (
+                        <div className="overflow-x-auto">
+                          <Table className="min-w-full">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-xs p-2">Match</TableHead>
+                                <TableHead className="text-xs p-2">Pronostic</TableHead>
+                                <TableHead className="text-xs p-2">Cote</TableHead>
+                                <TableHead className="text-xs p-2 w-8"></TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {matches.map((match) => (
+                                <TableRow key={match.id} className="border-b">
+                                  <TableCell className="p-2">
+                                    <div className="min-w-0">
+                                      <div className="text-xs font-medium truncate">
+                                        {match.team1} vs {match.team2}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {match.league} • {match.time}
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="p-2">
+                                    <div className="flex flex-col space-y-1">
+                                      <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded text-center">
+                                        {match.betType}
+                                      </span>
+                                      <span className="px-1.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded text-center">
+                                        {match.prediction}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="p-2">
+                                    <span className="text-sm font-bold text-green-600">{match.odds}</span>
+                                  </TableCell>
+                                  <TableCell className="p-2">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeMatch(match.id)}
+                                      className="text-red-500 p-1 h-6 w-6 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        /* Affichage en cartes pour les autres types */
+                        <div className="space-y-2">
+                          {matches.map((match) => (
+                            <Card key={match.id} className="p-3">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{match.team1} vs {match.team2}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {match.league} • {match.time}
+                                    </div>
                                   </div>
+                                   {(betType === 'combine' && matches.length > 1) && (
+                                     <Button
+                                       type="button"
+                                       variant="ghost"
+                                       size="sm"
+                                       onClick={() => removeMatch(match.id)}
+                                       className="text-red-500 p-1 h-auto hover:bg-red-50 ml-2"
+                                     >
+                                       <Trash2 className="w-4 h-4" />
+                                     </Button>
+                                   )}
                                 </div>
-                                {betType === 'combine' && matches.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeMatch(match.id)}
-                                    className="text-red-500 p-1 h-auto hover:bg-red-50 ml-2"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="flex space-x-2">
-                                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                    {match.betType}
-                                  </span>
-                                  <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                                    {match.prediction}
-                                  </span>
+                                
+                                <div className="flex items-center justify-between">
+                                  <div className="flex space-x-2">
+                                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                      {match.betType}
+                                    </span>
+                                    <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                                      {match.prediction}
+                                    </span>
+                                  </div>
+                                  <span className="text-sm font-bold text-green-600">{match.odds}</span>
                                 </div>
-                                <span className="text-sm font-bold text-green-600">{match.odds}</span>
                               </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
