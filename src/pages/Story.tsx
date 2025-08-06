@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share, MoreHorizontal, Plus, Search, Play, Menu, User } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreHorizontal, Plus, Search, Play, Menu, User, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BottomNavigation from '@/components/BottomNavigation';
 import SideMenu from '@/components/SideMenu';
 import NotificationIcon from '@/components/NotificationIcon';
@@ -26,7 +27,7 @@ const Story = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const { stories, loading, likeStory, unlikeStory, checkIfLiked, addStoryView } = useStories();
+  const { stories, loading, likeStory, unlikeStory, checkIfLiked, addStoryView, deleteStory } = useStories();
   
   const currentStory = stories[currentStoryIndex];
   const { comments } = useStoryComments(currentStory?.id || '');
@@ -145,6 +146,29 @@ const Story = () => {
       navigate('/profile');
     } else {
       navigate('/auth');
+    }
+  };
+
+  const handleDeleteStory = async () => {
+    if (!currentStory || !user) {
+      toast.error('Impossible de supprimer cette story');
+      return;
+    }
+
+    try {
+      await deleteStory(currentStory.id);
+      toast.success('Story supprimée');
+      
+      // Passer à la story suivante ou précédente
+      if (stories.length > 1) {
+        if (currentStoryIndex > 0) {
+          setCurrentStoryIndex(currentStoryIndex - 1);
+        } else if (currentStoryIndex < stories.length - 1) {
+          setCurrentStoryIndex(0);
+        }
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -380,9 +404,24 @@ const Story = () => {
             <Share className="w-5 h-5" />
           </Button>
           
-          <Button size="icon" variant="ghost" className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white">
-            <MoreHorizontal className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white">
+                <MoreHorizontal className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-black/90 border-white/20">
+              {user && currentStory?.user_id === user.id && (
+                <DropdownMenuItem 
+                  onClick={handleDeleteStory}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Informations utilisateur et description */}

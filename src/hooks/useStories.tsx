@@ -190,6 +190,25 @@ export const useStories = () => {
     }
   };
 
+  const deleteStory = async (storyId: string) => {
+    try {
+      if (!user) throw new Error('Utilisateur non connecté');
+
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', storyId)
+        .eq('user_id', user.id); // S'assurer que seul le créateur peut supprimer
+
+      if (error) throw error;
+
+      // Mettre à jour le state local
+      setStories(prev => prev.filter(story => story.id !== storyId));
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    }
+  };
+
   useEffect(() => {
     fetchStories();
   }, []);
@@ -203,6 +222,7 @@ export const useStories = () => {
     likeStory,
     unlikeStory,
     checkIfLiked,
+    deleteStory,
     refetch: fetchStories,
   };
 };
