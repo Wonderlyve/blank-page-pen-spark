@@ -25,6 +25,7 @@ import BulkPost from "./pages/BulkPost";
 import Update from "./pages/Update";
 import UpdateChecker from "./components/UpdateChecker";
 import NotFound from "./pages/NotFound";
+import Story from "./pages/Story";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/update" element={<Update />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/about" element={<About />} />
+              <Route path="/story" element={<Story />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
