@@ -321,11 +321,11 @@ const Story = () => {
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             <span className="text-white font-medium text-sm">
-              {currentStory?.location || 'En direct'}
+              {currentStory?.profiles?.username || currentStory?.profiles?.display_name || 'Utilisateur'}
             </span>
           </div>
           <Badge variant="secondary" className="bg-black/50 text-white border-none text-xs px-2 py-1">
-            LIVE {formatNumber(currentStory?.views || 0)}
+            {formatNumber(currentStory?.views || 0)} vues
           </Badge>
         </div>
 
