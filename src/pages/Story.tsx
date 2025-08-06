@@ -405,7 +405,7 @@ const Story = () => {
         )}
 
         {/* Miniatures des autres stories */}
-        <div className="absolute bottom-2 left-3 right-3 z-10">
+        <div className="absolute bottom-20 left-3 right-3 z-10">
           <div className="flex space-x-1.5 overflow-x-auto pb-1">
             {stories.slice(0, 5).map((story, index) => (
               <div 
