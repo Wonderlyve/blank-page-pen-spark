@@ -98,6 +98,15 @@ const Story = () => {
   // Gérer la pause/lecture au clic
   const handleStoryClick = () => {
     setIsPaused(!isPaused);
+    
+    // Gérer la pause/lecture de la vidéo
+    if (currentStory?.media_type === 'video' && videoRef.current) {
+      if (!isPaused) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
   };
 
   const handleLike = async () => {
@@ -270,7 +279,6 @@ const Story = () => {
                 className="w-full h-full object-cover" 
                 autoPlay={!isPaused}
                 loop={false}
-                muted
                 src={currentStory.media_url}
                 onLoadedMetadata={startTimer}
                 onEnded={goToNextStory}
