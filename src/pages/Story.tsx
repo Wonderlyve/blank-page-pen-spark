@@ -245,55 +245,9 @@ const Story = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header avec logo, notifications et photo de profil */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSideMenuOpen(true)}
-                className="lg:hidden text-white hover:bg-white/20"
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-              <div className="flex items-center space-x-2">
-                <img 
-                  src="/lovable-uploads/35ad5651-d83e-4704-9851-61f3ad9fb0c3.png" 
-                  alt="PENDOR Logo" 
-                  className="w-8 h-8 rounded-full"
-                />
-                <h1 className="text-xl font-bold text-white">PENDOR</h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {user && <NotificationIcon />}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleProfileClick}
-                className="text-white hover:bg-white/20"
-              >
-                {user ? (
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                ) : (
-                  <User className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-black">
       {/* Contenu Story */}
-      <div className="relative bg-black" style={{ height: 'calc(100vh - 73px - 80px)' }}>
+      <div className="relative bg-black" style={{ height: 'calc(100vh - 80px)' }}>
         {/* Média principal avec zone cliquable pour pause/lecture */}
         <div className="absolute inset-0" onClick={handleStoryClick}>
           {currentStory?.media_url ? (
@@ -459,15 +413,31 @@ const Story = () => {
                 className={`flex-shrink-0 cursor-pointer ${index === currentStoryIndex ? 'ring-2 ring-white' : ''}`}
                 onClick={() => setCurrentStoryIndex(index)}
               >
-                <div className="w-12 h-16 bg-gray-700 rounded-md overflow-hidden">
+                <div className="w-12 h-16 bg-gray-700 rounded-md overflow-hidden relative">
                   {story.media_url ? (
-                    <img 
-                      src={story.media_url} 
-                      alt="Story thumbnail" 
-                      className="w-full h-full object-cover"
-                    />
+                    story.media_type === 'video' ? (
+                      <div className="relative w-full h-full">
+                        <video 
+                          src={story.media_url} 
+                          className="w-full h-full object-cover"
+                          muted
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <img 
+                        src={story.media_url} 
+                        alt="Story thumbnail" 
+                        className="w-full h-full object-cover"
+                      />
+                    )
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <Play className="w-3 h-3 text-white" />
+                    </div>
                   )}
                 </div>
               </div>
