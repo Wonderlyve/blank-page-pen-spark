@@ -21,6 +21,8 @@ const Story = () => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
@@ -42,6 +44,45 @@ const Story = () => {
     }
   };
 
+  // Fonction pour passer à la story précédente
+  const goToPreviousStory = () => {
+    if (currentStoryIndex > 0) {
+      setCurrentStoryIndex(currentStoryIndex - 1);
+    } else {
+      // Aller à la dernière story
+      setCurrentStoryIndex(stories.length - 1);
+    }
+  };
+
+  // Minimum swipe distance pour déclencher une action
+  const minSwipeDistance = 50;
+
+  // Gestion du swipe vertical
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientY);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientY);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isSwipeUp = distance > minSwipeDistance;
+    const isSwipeDown = distance < -minSwipeDistance;
+
+    if (isSwipeUp) {
+      // Swipe vers le haut = story suivante
+      goToNextStory();
+    } else if (isSwipeDown) {
+      // Swipe vers le bas = story précédente
+      goToPreviousStory();
+    }
+  };
+
   // Fonction pour démarrer le timer d'auto-progression
   const startTimer = () => {
     if (timerRef.current) {
@@ -51,10 +92,9 @@ const Story = () => {
     if (!isPaused && currentStory) {
       let duration = 6000; // 6 secondes par défaut pour les images
 
-      if (currentStory.media_type === 'video' && videoRef.current) {
-        // Pour les vidéos, utiliser la durée réelle (max 60 secondes)
-        const videoDuration = Math.min(videoRef.current.duration * 1000, 60000);
-        duration = videoDuration || 6000;
+      if (currentStory.media_type === 'video') {
+        // Toutes les vidéos durent exactement 120 secondes (2 minutes)
+        duration = 120000;
       }
 
       timerRef.current = setTimeout(() => {
@@ -63,14 +103,27 @@ const Story = () => {
     }
   };
 
-  // Nettoyage du timer
+  // Nettoyage du timer et gestion de la visibilité de la page
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Arrêter la vidéo quand l'utilisateur change d'app ou verrouille l'écran
+        if (currentStory?.media_type === 'video' && videoRef.current) {
+          videoRef.current.pause();
+        }
+        setIsPaused(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [currentStory?.media_type]);
 
   // Suivre les vues et les likes pour la story actuelle
   useEffect(() => {
@@ -248,8 +301,14 @@ const Story = () => {
     <div className="min-h-screen bg-black">
       {/* Contenu Story */}
       <div className="relative bg-black" style={{ height: 'calc(100vh - 80px)' }}>
-        {/* Média principal avec zone cliquable pour pause/lecture */}
-        <div className="absolute inset-0" onClick={handleStoryClick}>
+        {/* Média principal avec zone cliquable pour pause/lecture et swipe vertical */}
+        <div 
+          className="absolute inset-0" 
+          onClick={handleStoryClick}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           {currentStory?.media_url ? (
             currentStory.media_type === 'video' ? (
               <video 
@@ -405,7 +464,7 @@ const Story = () => {
         )}
 
         {/* Miniatures des autres stories */}
-        <div className="absolute bottom-20 left-3 right-3 z-10">
+        <div className="absolute bottom-16 left-3 right-3 z-10">
           <div className="flex space-x-1.5 overflow-x-auto pb-1">
             {stories.slice(0, 5).map((story, index) => (
               <div 
@@ -413,7 +472,7 @@ const Story = () => {
                 className={`flex-shrink-0 cursor-pointer ${index === currentStoryIndex ? 'ring-2 ring-white' : ''}`}
                 onClick={() => setCurrentStoryIndex(index)}
               >
-                <div className="w-12 h-16 bg-gray-700 rounded-md overflow-hidden relative">
+                <div className="w-12 h-12 bg-gray-700 rounded-md overflow-hidden relative">
                   {story.media_url ? (
                     story.media_type === 'video' ? (
                       <div className="relative w-full h-full">

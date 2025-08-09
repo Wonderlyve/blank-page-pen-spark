@@ -175,31 +175,40 @@ export type Database = {
         Row: {
           created_at: string
           creator_id: string
+          currency: string
           description: string | null
           id: string
+          image_url: string | null
           is_private: boolean
           name: string
           price: number
+          subscription_code: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           creator_id: string
+          currency?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_private?: boolean
           name: string
           price?: number
+          subscription_code?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           creator_id?: string
+          currency?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_private?: boolean
           name?: string
           price?: number
+          subscription_code?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -504,6 +513,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          channel_id: string | null
           content: string
           created_at: string
           from_user_id: string | null
@@ -514,6 +524,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          channel_id?: string | null
           content: string
           created_at?: string
           from_user_id?: string | null
@@ -524,6 +535,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          channel_id?: string | null
           content?: string
           created_at?: string
           from_user_id?: string | null
@@ -533,7 +545,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_likes: {
         Row: {
@@ -606,6 +626,7 @@ export type Database = {
           likes: number | null
           match_teams: string | null
           odds: number | null
+          post_type: string | null
           prediction_text: string | null
           reservation_code: string | null
           shares: number | null
@@ -628,6 +649,7 @@ export type Database = {
           likes?: number | null
           match_teams?: string | null
           odds?: number | null
+          post_type?: string | null
           prediction_text?: string | null
           reservation_code?: string | null
           shares?: number | null
@@ -650,6 +672,7 @@ export type Database = {
           likes?: number | null
           match_teams?: string | null
           odds?: number | null
+          post_type?: string | null
           prediction_text?: string | null
           reservation_code?: string | null
           shares?: number | null
@@ -843,6 +866,39 @@ export type Database = {
           id?: string
           story_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      update_posts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          update_url: string
+          updated_at: string
+          user_id: string
+          version_name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          update_url: string
+          updated_at?: string
+          user_id: string
+          version_name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          update_url?: string
+          updated_at?: string
+          user_id?: string
+          version_name?: string
         }
         Relationships: []
       }
