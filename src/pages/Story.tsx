@@ -164,13 +164,27 @@ const Story = () => {
     };
   }, [currentStory?.media_type]);
 
-  // Suivre les vues et les likes pour la story actuelle
+  // Suivre les vues et les likes pour la story actuelle + autoplay vidéo
   useEffect(() => {
     if (currentStory && user) {
       addStoryView(currentStory.id);
       checkIfLiked(currentStory.id).then(setIsLiked);
     }
-  }, [currentStory?.id, user]);
+
+    // Autoplay vidéo après transition
+    if (currentStory?.media_type === 'video' && videoRef.current && !isPaused) {
+      const playVideo = async () => {
+        try {
+          await videoRef.current?.play();
+        } catch (error) {
+          console.error('Erreur autoplay:', error);
+        }
+      };
+      
+      // Délai pour s'assurer que la transition scroll-snap est terminée
+      setTimeout(playVideo, 300);
+    }
+  }, [currentStory?.id, user, isPaused]);
 
   // Gérer la barre de progression et le timer
   useEffect(() => {
@@ -367,20 +381,36 @@ const Story = () => {
                         ref={index === currentStoryIndex ? videoRef : undefined}
                         className="w-full h-full object-cover" 
                         autoPlay={index === currentStoryIndex && !isPaused}
+                        muted
+                        playsInline
+                        preload="metadata"
                         loop={false}
                         src={story.media_url}
-                        onLoadedMetadata={index === currentStoryIndex ? startTimer : undefined}
+                        onLoadedData={() => {
+                          // Vidéo prête à être lue
+                          if (index === currentStoryIndex && !isPaused && videoRef.current) {
+                            videoRef.current.play().catch(console.error);
+                          }
+                        }}
+                        onCanPlay={() => {
+                          // Commencer le timer quand la vidéo peut être lue
+                          if (index === currentStoryIndex && !isPaused) {
+                            startTimer();
+                          }
+                        }}
                         onEnded={index === currentStoryIndex ? goToNextStory : undefined}
                         onError={(e) => {
                           console.error('Video error:', e);
                           console.log('Video URL:', story.media_url);
                         }}
+                        poster={story.media_url + '#t=0.1'}
                       />
                     ) : (
                       <img 
                         className="w-full h-full object-cover" 
                         src={story.media_url} 
                         alt="Story content"
+                        loading="eager"
                         onError={(e) => {
                           console.error('Image error:', e);
                           console.log('Image URL:', story.media_url);
