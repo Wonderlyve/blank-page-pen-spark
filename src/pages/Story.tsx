@@ -381,7 +381,6 @@ const Story = () => {
                         ref={index === currentStoryIndex ? videoRef : undefined}
                         className="w-full h-full object-cover" 
                         autoPlay={index === currentStoryIndex && !isPaused}
-                        muted
                         playsInline
                         preload="metadata"
                         loop={false}
