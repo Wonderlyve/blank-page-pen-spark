@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Image, ExternalLink, Eye, MousePointer, Trash2, Power } from 'lucide-react';
 import { useAds } from '@/hooks/useAds';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
 
@@ -31,15 +32,37 @@ const Ads = () => {
     landing_image_files: [] as File[]
   });
 
-  // Vérifier si l'utilisateur est Smart
-  const isSmartUser = user?.email === 'smart@example.com' || 
-                     user?.user_metadata?.display_name === 'Smart';
+  // Vérifier si l'utilisateur est Smart (aligné avec les politiques RLS)
+  const [isSmartUser, setIsSmartUser] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkSmartUser = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, display_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        const isSmartByProfile = profile?.username === 'smart' || profile?.display_name === 'Smart';
+        const isSmartByEmail = user?.email === 'smart@example.com';
+        
+        setIsSmartUser(isSmartByProfile || isSmartByEmail);
+      } catch (error) {
+        console.error('Error checking Smart user:', error);
+      }
+    };
+
+    checkSmartUser();
+  }, [user]);
 
   React.useEffect(() => {
     if (isSmartUser) {
       fetchMyAds();
     }
-  }, [isSmartUser]);
+  }, [isSmartUser, fetchMyAds]);
 
   if (!isSmartUser) {
     return (

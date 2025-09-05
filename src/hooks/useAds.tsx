@@ -213,6 +213,7 @@ export const useAds = () => {
 
   const recordAdClick = async (adId: string) => {
     try {
+      // Enregistrer le clic (qui va trigger automatiquement la mise à jour des stats)
       const { error } = await supabase
         .from('ad_clicks')
         .insert({
@@ -223,6 +224,15 @@ export const useAds = () => {
       if (error) {
         console.error('Error recording ad click:', error);
       }
+
+      // Mettre à jour le count local pour une UX immédiate
+      setAds(prevAds => 
+        prevAds.map(ad => 
+          ad.id === adId 
+            ? { ...ad, clicks: ad.clicks + 1 }
+            : ad
+        )
+      );
     } catch (error) {
       console.error('Error:', error);
     }

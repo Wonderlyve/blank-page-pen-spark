@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, MousePointer, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAds } from '@/hooks/useAds';
+import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 
 interface AdPostProps {
   ad: {
@@ -23,6 +25,22 @@ interface AdPostProps {
 const AdPost = ({ ad }: AdPostProps) => {
   const navigate = useNavigate();
   const { recordAdClick } = useAds();
+
+  // Tracker la vue de la publicité
+  React.useEffect(() => {
+    const recordAdView = async () => {
+      try {
+        await supabase
+          .from('ads')
+          .update({ views: ad.views + 1 })
+          .eq('id', ad.id);
+      } catch (error) {
+        console.error('Error recording ad view:', error);
+      }
+    };
+
+    recordAdView();
+  }, [ad.id, ad.views]);
 
   const handleButtonClick = async () => {
     // Enregistrer le clic
