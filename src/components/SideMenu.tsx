@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { X, User, Home, Video, TrendingUp, Settings, HelpCircle, LogOut, Bell, Bookmark, Shield, Info, Upload, Smartphone } from 'lucide-react';
+import { X, User, Home, Video, TrendingUp, Settings, HelpCircle, LogOut, Bell, Bookmark, Shield, Info, Upload, Smartphone, Eye } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -29,7 +29,8 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
   const smartMenuItems = user?.email === 'smart@example.com' || user?.user_metadata?.display_name === 'Smart'
     ? [
         { icon: Upload, label: 'Poster', action: () => { navigate('/bulk-post'); onOpenChange(false); } },
-        { icon: Smartphone, label: 'Update', action: () => { navigate('/update'); onOpenChange(false); } }
+        { icon: Smartphone, label: 'Update', action: () => { navigate('/update'); onOpenChange(false); } },
+        { icon: Eye, label: 'Ads', action: () => { navigate('/ads'); onOpenChange(false); } }
       ]
     : [];
 
