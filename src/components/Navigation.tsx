@@ -20,7 +20,6 @@ const Navigation = () => {
     <nav className="bg-slate-900 text-white p-4 shadow-lg">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-yellow-400">
-          AUTOCOP
         </Link>
         <div className="hidden md:flex space-x-6">
           {navItems.map((item) => (
