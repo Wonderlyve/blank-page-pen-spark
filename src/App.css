@@ -40,3 +40,46 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Story video styles */
+.story-video {
+  position: relative;
+}
+
+/* Cacher les contrôles vidéo personnalisés dans les stories */
+.story-video .absolute.inset-0.flex.items-center.justify-center.opacity-0 {
+  display: none !important;
+}
+
+/* Animation pour la barre de progression des stories */
+@keyframes story-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.story-progress-bar {
+  animation: story-progress 6s linear forwards;
+}
+
+.story-progress-bar.paused {
+  animation-play-state: paused;
+}
+
+/* Styles pour les boutons d'interaction */
+.story-interaction-button {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Améliorer les transitions des boutons */
+.story-interaction-button:hover {
+  transform: scale(1.05);
+}
+
+.story-interaction-button:active {
+  transform: scale(0.95);
+}

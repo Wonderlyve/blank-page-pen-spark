@@ -15,6 +15,10 @@ export interface VipProno {
   created_at: string;
   updated_at: string;
   creator_username?: string;
+  bet_type?: string;
+  matches_data?: string;
+  match_teams?: string;
+  sport?: string;
 }
 
 export const useVipPronos = (channelId: string) => {
@@ -61,7 +65,7 @@ export const useVipPronos = (channelId: string) => {
     }
   };
 
-  const createVipProno = async (pronoData: VipPronoData & { channelId: string }) => {
+  const createVipProno = async (pronoData: VipPronoData & { channelId: string; betType?: string; matchesData?: string; matchTeams?: string; sport?: string }) => {
     if (!user) {
       toast.error('Vous devez être connecté pour créer un prono VIP');
       return false;
@@ -101,7 +105,11 @@ export const useVipPronos = (channelId: string) => {
           total_odds: parseFloat(pronoData.totalOdds),
           image_url: imageUrl,
           description: pronoData.description,
-          prediction_text: pronoData.predictionText
+          prediction_text: pronoData.predictionText,
+          bet_type: pronoData.betType || 'simple',
+          matches_data: pronoData.matchesData || null,
+          match_teams: pronoData.matchTeams || null,
+          sport: pronoData.sport || null
         });
 
       if (error) {

@@ -28,6 +28,10 @@ export interface Post {
   is_liked?: boolean;
   saved_at?: string;
   status?: 'won' | 'lost' | 'pending';
+  bet_type?: string;
+  matches_data?: string;
+  reservation_code?: string;
+  post_type?: string;
 }
 
 const POSTS_PER_PAGE = 10;
@@ -207,6 +211,11 @@ export const useOptimizedPosts = () => {
     confidence: number;
     image_file?: File;
     video_file?: File;
+    bet_type?: string;
+    matches_data?: string;
+    reservation_code?: string;
+    post_type?: string;
+    content?: string;
   }) => {
     if (!user) {
       toast.error('Vous devez être connecté pour créer un post');
@@ -214,47 +223,62 @@ export const useOptimizedPosts = () => {
     }
 
     try {
+      console.log('Début createPost avec données:', postData);
+      
       let image_url = null;
       let video_url = null;
 
       if (postData.image_file) {
+        console.log('Upload image...');
         image_url = await uploadOptimizedFile(postData.image_file, 'post-images');
+        console.log('Image uploadée:', image_url);
       }
 
       if (postData.video_file) {
+        console.log('Upload vidéo...');
         video_url = await uploadOptimizedFile(postData.video_file, 'post-videos');
+        console.log('Vidéo uploadée:', video_url);
       }
+
+      const insertData = {
+        user_id: user.id,
+        content: postData.content || postData.analysis,
+        sport: postData.sport,
+        match_teams: postData.match_teams,
+        prediction_text: postData.prediction_text,
+        analysis: postData.analysis,
+        odds: postData.odds,
+        confidence: postData.confidence,
+        image_url,
+        video_url,
+        bet_type: postData.bet_type,
+        reservation_code: postData.reservation_code,
+        post_type: postData.post_type,
+        likes: 0,
+        shares: 0,
+        views: 0
+      };
+
+      console.log('Données à insérer:', insertData);
 
       const { data, error } = await supabase
         .from('posts')
-        .insert({
-          user_id: user.id,
-          content: postData.analysis,
-          sport: postData.sport,
-          match_teams: postData.match_teams,
-          prediction_text: postData.prediction_text,
-          analysis: postData.analysis,
-          odds: postData.odds,
-          confidence: postData.confidence,
-          image_url,
-          video_url,
-          likes: 0,
-          shares: 0
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating post:', error);
-        toast.error('Erreur lors de la création du post');
+        console.error('Erreur Supabase lors de la création du post:', error);
+        toast.error(`Erreur lors de la création du post: ${error.message}`);
         return null;
       }
 
+      console.log('Post créé avec succès:', data);
       toast.success('Post créé avec succès !');
       loadInitialPosts();
       return data;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Erreur générale:', error);
       toast.error('Erreur lors de la création du post');
       return null;
     }
@@ -337,146 +361,41 @@ export const useOptimizedPosts = () => {
     }
   };
 
-  // Écouter les nouveaux posts en temps réel
+  // Écouter les nouveaux posts en temps réel - Simplifié
   useEffect(() => {
+    if (!lastPostTimestamp) return;
+
     // Nettoyer l'ancien canal s'il existe
     if (channelRef.current) {
-      console.log('Cleaning up existing posts channel');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Créer un nouveau canal pour écouter les nouveaux posts
-    const sessionId = Math.random().toString(36).substring(2, 15);
-    const channelName = `posts-realtime-${sessionId}`;
-    
-    console.log('Creating posts realtime channel:', channelName);
-    
-    try {
-      const channel = supabase.channel(channelName);
-      
-      // Écouter les nouveaux posts
-      channel.on(
+    const channel = supabase
+      .channel('posts-updates')
+      .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'posts'
         },
-        (payload: any) => {
-          console.log('Nouveau post détecté:', payload);
-          // Actualiser automatiquement quand un nouveau post est ajouté
+        () => {
+          // Simplement actualiser la liste quand un nouveau post est détecté
           refreshPostsIfNeeded();
         }
-      );
+      )
+      .subscribe();
 
-      // Écouter les mises à jour des posts (pour les likes)
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'posts'
-        },
-        (payload: any) => {
-          console.log('Post mis à jour:', payload);
-          // Mettre à jour le post spécifique dans la liste
-          setPosts(prev => prev.map(post => 
-            post.id === payload.new.id 
-              ? { ...post, ...payload.new, like_count: payload.new.likes }
-              : post
-          ));
-        }
-      );
-
-      // Écouter les likes en temps réel
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'post_likes'
-        },
-        async (payload: any) => {
-          console.log('Like event:', payload);
-          // Recharger les informations du post pour avoir les likes à jour
-          const postId = payload.new?.post_id || payload.old?.post_id;
-          if (postId) {
-            const { data: updatedPost } = await supabase
-              .from('posts')
-              .select('likes')
-              .eq('id', postId)
-              .single();
-            
-            if (updatedPost) {
-              setPosts(prev => prev.map(post => 
-                post.id === postId 
-                  ? { 
-                      ...post, 
-                      likes: updatedPost.likes,
-                      like_count: updatedPost.likes
-                    }
-                  : post
-              ));
-            }
-          }
-        }
-      );
-
-      // Écouter les vues en temps réel
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'post_views'
-        },
-        async (payload: any) => {
-          console.log('View event:', payload);
-          // Recharger les informations du post pour avoir les vues à jour
-          const postId = payload.new?.post_id;
-          if (postId) {
-            const { data: updatedPost } = await supabase
-              .from('posts')
-              .select('views')
-              .eq('id', postId)
-              .single();
-            
-            if (updatedPost) {
-              setPosts(prev => prev.map(post => 
-                post.id === postId 
-                  ? { 
-                      ...post, 
-                      views: updatedPost.views
-                    }
-                  : post
-              ));
-            }
-          }
-        }
-      );
-
-      channel.subscribe((status: string) => {
-        console.log('Posts realtime subscription status:', status);
-      });
-
-      channelRef.current = channel;
-    } catch (error) {
-      console.error('Error setting up posts realtime channel:', error);
-    }
+    channelRef.current = channel;
 
     return () => {
       if (channelRef.current) {
-        console.log('Unsubscribing from posts realtime channel');
-        try {
-          supabase.removeChannel(channelRef.current);
-        } catch (error) {
-          console.error('Error removing posts realtime channel:', error);
-        }
+        supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [refreshPostsIfNeeded]);
+  }, [lastPostTimestamp, refreshPostsIfNeeded]);
 
   // Vérification périodique pour les nouveaux posts (fallback)
   useEffect(() => {

@@ -14,6 +14,10 @@ import { useStories } from '@/hooks/useStories';
 import { useStoryComments } from '@/hooks/useStoryComments';
 import { CreateStoryModal } from '@/components/CreateStoryModal';
 import { toast } from 'sonner';
+import { useVideoControl } from '@/hooks/useVideoControl';
+import { videoControlManager } from '@/optimization/VideoControlManager';
+
+import SmartVideo from '@/components/SmartVideo';
 
 const Story = () => {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
@@ -24,11 +28,17 @@ const Story = () => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Nettoyer le gestionnaire vidéo au démontage
+  useEffect(() => {
+    return () => {
+      videoControlManager.cleanup();
+    };
+  }, []);
   
   const { stories, loading, likeStory, unlikeStory, checkIfLiked, addStoryView, deleteStory } = useStories();
   
@@ -146,10 +156,8 @@ const Story = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Arrêter la vidéo quand l'utilisateur change d'app ou verrouille l'écran
-        if (currentStory?.media_type === 'video' && videoRef.current) {
-          videoRef.current.pause();
-        }
+        // Mettre en pause toutes les vidéos quand l'utilisateur change d'app
+        videoControlManager.pauseAll();
         setIsPaused(true);
       }
     };
@@ -171,18 +179,10 @@ const Story = () => {
       checkIfLiked(currentStory.id).then(setIsLiked);
     }
 
-    // Autoplay vidéo après transition
-    if (currentStory?.media_type === 'video' && videoRef.current && !isPaused) {
-      const playVideo = async () => {
-        try {
-          await videoRef.current?.play();
-        } catch (error) {
-          console.error('Erreur autoplay:', error);
-        }
-      };
-      
-      // Délai pour s'assurer que la transition scroll-snap est terminée
-      setTimeout(playVideo, 300);
+    // Gérer le changement de vidéo active
+    if (currentStory?.media_type === 'video') {
+      // Le useVideoControl se charge automatiquement de la lecture/pause
+      console.log(`📹 Story vidéo active: ${currentStory.id}`);
     }
   }, [currentStory?.id, user, isPaused]);
 
@@ -206,17 +206,14 @@ const Story = () => {
   const handleStoryClick = () => {
     setIsPaused(!isPaused);
     
-    // Gérer la pause/lecture de la vidéo
-    if (currentStory?.media_type === 'video' && videoRef.current) {
-      if (!isPaused) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-    }
+    // Le gestionnaire vidéo se charge automatiquement de la pause/lecture
+    console.log(`${!isPaused ? '⏸️' : '▶️'} Story ${isPaused ? 'reprise' : 'pausée'}`);
   };
 
-  const handleLike = async () => {
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!currentStory || !user) {
       toast.error('Vous devez être connecté pour liker');
       return;
@@ -235,6 +232,47 @@ const Story = () => {
     } catch (error) {
       toast.error('Erreur lors du like');
     }
+  };
+
+  const handleComment = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Vous devez être connecté pour commenter');
+      return;
+    }
+    
+    // Ouvrir une modal de commentaires ou naviguer vers une page de commentaires
+    toast.info('Fonctionnalité de commentaire bientôt disponible');
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!currentStory) return;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `Story de ${currentStory.profiles?.username || 'Utilisateur'}`,
+        text: currentStory.content || 'Regardez cette story sur PENDOR',
+        url: window.location.href
+      }).catch(() => {
+        // Fallback si le partage natif échoue
+        navigator.clipboard.writeText(window.location.href);
+        toast.success('Lien copié dans le presse-papiers');
+      });
+    } else {
+      // Fallback pour les navigateurs qui ne supportent pas Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Lien copié dans le presse-papiers');
+    }
+  };
+
+  const handleMoreOptions = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const formatNumber = (num: number) => {
@@ -377,32 +415,31 @@ const Story = () => {
                 >
                   {story.media_url ? (
                     story.media_type === 'video' ? (
-                      <video 
-                        ref={index === currentStoryIndex ? videoRef : undefined}
-                        className="w-full h-full object-cover" 
-                        autoPlay={index === currentStoryIndex && !isPaused}
-                        playsInline
-                        preload="metadata"
-                        loop={false}
+                      <SmartVideo
                         src={story.media_url}
-                        onLoadedData={() => {
-                          // Vidéo prête à être lue
-                          if (index === currentStoryIndex && !isPaused && videoRef.current) {
-                            videoRef.current.play().catch(console.error);
-                          }
+                        poster={story.media_url + '#t=0.1'}
+                        isActive={index === currentStoryIndex}
+                        isPaused={isPaused}
+                        autoPlay={true}
+                        muted={false}
+                        loop={false}
+                        preload="auto"
+                        className="w-full h-full object-cover story-video"
+                        nearbyVideos={stories.map(s => s.media_url).filter(Boolean)}
+                        currentIndex={index}
+                        onVideoStateChange={(isPlaying) => {
+                          console.log(`Vidéo ${story.id} ${isPlaying ? 'en lecture' : 'en pause'}`);
                         }}
-                        onCanPlay={() => {
-                          // Commencer le timer quand la vidéo peut être lue
+                        onEnded={index === currentStoryIndex ? goToNextStory : undefined}
+                        onVideoReady={() => {
                           if (index === currentStoryIndex && !isPaused) {
                             startTimer();
                           }
                         }}
-                        onEnded={index === currentStoryIndex ? goToNextStory : undefined}
-                        onError={(e) => {
-                          console.error('Video error:', e);
-                          console.log('Video URL:', story.media_url);
+                        onError={(error) => {
+                          console.error('Erreur vidéo:', error);
+                          toast.error('Erreur de lecture vidéo');
                         }}
-                        poster={story.media_url + '#t=0.1'}
                       />
                     ) : (
                       <img 
@@ -478,7 +515,7 @@ const Story = () => {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className={`w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white ${isLiked ? 'text-red-500' : ''}`}
+                          className={`w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all story-interaction-button ${isLiked ? 'text-red-500 bg-red-500/20' : ''}`}
                           onClick={handleLike}
                         >
                           <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
@@ -489,7 +526,12 @@ const Story = () => {
                       </div>
                       
                       <div className="flex flex-col items-center space-y-1">
-                        <Button size="icon" variant="ghost" className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all story-interaction-button"
+                          onClick={handleComment}
+                        >
                           <MessageCircle className="w-5 h-5" />
                         </Button>
                         <span className="text-white text-xs font-medium">
@@ -497,20 +539,33 @@ const Story = () => {
                         </span>
                       </div>
                       
-                      <Button size="icon" variant="ghost" className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all story-interaction-button"
+                        onClick={handleShare}
+                      >
                         <Share className="w-5 h-5" />
                       </Button>
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all story-interaction-button"
+                            onClick={handleMoreOptions}
+                          >
                             <MoreHorizontal className="w-5 h-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-black/90 border-white/20">
                           {user && story.user_id === user.id && (
                             <DropdownMenuItem 
-                              onClick={handleDeleteStory}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteStory();
+                              }}
                               className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
@@ -599,9 +654,12 @@ const Story = () => {
                     {/* Bouton de création flottant */}
                     <div className="absolute top-1/2 right-3 transform -translate-y-1/2 z-10">
                       <Button
-                        onClick={() => setShowCreateModal(true)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowCreateModal(true);
+                        }}
                         size="icon"
-                        className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg"
+                        className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg transition-all"
                       >
                         <Plus className="w-5 h-5" />
                       </Button>

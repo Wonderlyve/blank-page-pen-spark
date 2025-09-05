@@ -9,11 +9,15 @@ import BottomNavigation from '@/components/BottomNavigation';
 import SideMenu from '@/components/SideMenu';
 import NotificationIcon from '@/components/NotificationIcon';
 import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
+import { useAds } from '@/hooks/useAds';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PostSkeleton from '@/optimization/PostSkeleton';
+import AdPost from '@/components/AdPost';
 import { supabase } from '@/integrations/supabase/client';
 import SimpleUpdatePost from '@/components/SimpleUpdatePost';
+import { useVideoOptimization } from '@/hooks/useVideoOptimization';
+import { useMemo } from 'react';
 
 const Index = () => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
@@ -25,12 +29,42 @@ const Index = () => {
   const [maxOdds, setMaxOdds] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const { posts, loading, initialLoading } = useOptimizedPosts();
+  const { ads } = useAds();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Extraire les URLs des vidéos pour l'optimisation
+  const videoUrls = useMemo(() => 
+    posts
+      .map(post => post.video_url)
+      .filter((video): video is string => Boolean(video)),
+    [posts]
+  );
+
+  // Initialiser l'optimisation vidéo
+  const { preloadVideos } = useVideoOptimization({
+    videos: videoUrls,
+    currentIndex: 0,
+    autoPreload: true,
+    enablePrefetch: true
+  });
+  
   // Gérer l'affichage d'un post spécifique depuis une notification
   const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
+
+  // Précharger les vidéos importantes au démarrage
+  useEffect(() => {
+    if (videoUrls.length > 0) {
+      // Précharger les 3 premières vidéos avec haute priorité
+      const priorityVideos = videoUrls.slice(0, 3);
+      preloadVideos(priorityVideos, 'high');
+      
+      // Précharger les 3 suivantes avec priorité moyenne
+      const mediumPriorityVideos = videoUrls.slice(3, 6);
+      preloadVideos(mediumPriorityVideos, 'medium');
+    }
+  }, [videoUrls, preloadVideos]);
 
   // Charger les posts masqués et utilisateurs bloqués
   useEffect(() => {
@@ -130,6 +164,29 @@ const Index = () => {
   // Obtenir la liste unique des sports pour le filtre
   const uniqueSports = Array.from(new Set(posts.map(post => post.sport).filter(Boolean)));
 
+  // Mélanger les posts et les ads de manière naturelle
+  const getMixedContent = () => {
+    const mixedContent: Array<{ type: 'post' | 'ad'; data: any }> = [];
+    
+    // Convertir les posts filtrés
+    filteredPosts.forEach((post, index) => {
+      mixedContent.push({ type: 'post', data: post });
+      
+      // Insérer une ad tous les 4 posts
+      if ((index + 1) % 4 === 0 && ads.length > 0) {
+        const adIndex = Math.floor((index + 1) / 4) - 1;
+        const ad = ads[adIndex % ads.length];
+        if (ad) {
+          mixedContent.push({ type: 'ad', data: ad });
+        }
+      }
+    });
+    
+    return mixedContent;
+  };
+
+  const mixedContent = getMixedContent();
+
   const clearFilters = () => {
     setSelectedSport('');
     setMinOdds('');
@@ -181,7 +238,8 @@ const Index = () => {
     image: post.image_url,
     video: post.video_url,
     reservationCode: post.reservation_code,
-    betType: post.bet_type,
+     betType: post.bet_type,
+     matches: post.matches_data ? JSON.parse(post.matches_data) : undefined,
     is_liked: post.is_liked || false
     };
   };
@@ -323,7 +381,10 @@ const Index = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-4 pb-20 space-y-4">
+      <div 
+        className="max-w-2xl mx-auto px-4 py-4 pb-20 space-y-4"
+        data-prefetch-videos={JSON.stringify(videoUrls.slice(0, 5))}
+      >
         {/* Update Notification Post */}
         <SimpleUpdatePost />
         
@@ -340,22 +401,31 @@ const Index = () => {
             </p>
           </div>
         ) : (
-          filteredPosts.map((post) => (
-            <div 
-              key={post.id} 
-              id={`post-${post.id}`}
-              className={`transition-all duration-1000 ${
-                highlightedPostId === post.id 
-                  ? 'ring-2 ring-blue-500 ring-opacity-75 shadow-lg' 
-                  : ''
-              }`}
-            >
-              <PredictionCard 
-                prediction={transformPostToPrediction(post)} 
-                onOpenModal={handleOpenModal}
-              />
-            </div>
-          ))
+          mixedContent.map((item, index) => {
+            if (item.type === 'ad') {
+              return (
+                <AdPost key={`ad-${item.data.id}`} ad={item.data} />
+              );
+            } else {
+              const post = item.data;
+              return (
+                <div 
+                  key={post.id} 
+                  id={`post-${post.id}`}
+                  className={`transition-all duration-1000 ${
+                    highlightedPostId === post.id 
+                      ? 'ring-2 ring-blue-500 ring-opacity-75 shadow-lg' 
+                      : ''
+                  }`}
+                >
+                  <PredictionCard 
+                    prediction={transformPostToPrediction(post)} 
+                    onOpenModal={handleOpenModal}
+                  />
+                </div>
+              );
+            }
+          })
         )}
 
         {loading && (
