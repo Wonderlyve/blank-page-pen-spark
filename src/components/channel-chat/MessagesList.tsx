@@ -99,12 +99,17 @@ const MessagesList = ({ messages, pronos, debriefings, loading, isCreator, creat
               return (
                 <VipPronoCard
                   key={`prono-${item.id}`}
+                  id={item.id}
                   totalOdds={item.total_odds}
                   imageUrl={item.image_url}
                   description={item.description}
                   predictionText={item.prediction_text}
                   createdAt={item.created_at}
                   creatorUsername={item.creator_username}
+                  betType={item.bet_type}
+                  matchesData={item.matches_data}
+                  matchTeams={item.match_teams}
+                  sport={item.sport}
                   onReply={() => onReplyToProno?.(item as VipProno)}
                 />
               );

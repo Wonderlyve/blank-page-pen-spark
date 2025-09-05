@@ -3,27 +3,39 @@ import { Crown, Eye, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import VipMultiplePronoModal from './VipMultiplePronoModal';
 
 interface VipPronoCardProps {
+  id: string;
   totalOdds: number;
   imageUrl?: string;
   description: string;
   predictionText: string;
   createdAt: string;
   creatorUsername?: string;
+  betType?: string;
+  matchesData?: string;
+  matchTeams?: string;
+  sport?: string;
   onReply?: (pronoData: any) => void;
 }
 
 const VipPronoCard = ({ 
+  id,
   totalOdds, 
   imageUrl, 
   description, 
   predictionText, 
   createdAt, 
   creatorUsername,
+  betType,
+  matchesData,
+  matchTeams,
+  sport,
   onReply
 }: VipPronoCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showMultipleModal, setShowMultipleModal] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -62,6 +74,28 @@ const VipPronoCard = ({
     }
     
     setSwipeOffset(0);
+  };
+
+  // Déterminer le type de pronostic
+  const isMultiple = betType === 'multiple' || betType === 'combine';
+  let matchesArray: any[] = [];
+  
+  if (matchesData) {
+    try {
+      matchesArray = JSON.parse(matchesData);
+    } catch (e) {
+      console.error('Error parsing matches data:', e);
+    }
+  }
+  
+  const isMultipleBet = isMultiple || matchesArray.length > 1 || (matchTeams && matchTeams.includes('|'));
+
+  const handleViewDetails = () => {
+    if (isMultipleBet) {
+      setShowMultipleModal(true);
+    } else {
+      setShowDetails(true);
+    }
   };
 
   return (
@@ -115,8 +149,19 @@ const VipPronoCard = ({
             {description}
           </p>
 
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-yellow-700 font-medium">
+              {isMultipleBet ? (betType === 'combine' ? 'Pari Combiné' : 'Paris Multiple') : 'Pari Simple'}
+            </span>
+            {isMultipleBet && (
+              <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">
+                {matchesArray.length || (matchTeams?.split('|').length || 1)} match{(matchesArray.length || (matchTeams?.split('|').length || 1)) > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          
           <Button 
-            onClick={() => setShowDetails(true)}
+            onClick={handleViewDetails}
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
           >
             <Eye className="w-4 h-4 mr-2" />
@@ -125,6 +170,7 @@ const VipPronoCard = ({
         </CardContent>
       </Card>
 
+      {/* Modal pour pronostics simples */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -179,6 +225,25 @@ const VipPronoCard = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal pour pronostics multiples/combinés */}
+      <VipMultiplePronoModal
+        open={showMultipleModal}
+        onOpenChange={setShowMultipleModal}
+        prono={{
+          id,
+          creator_username: creatorUsername,
+          total_odds: totalOdds,
+          description,
+          prediction_text: predictionText,
+          created_at: createdAt,
+          image_url: imageUrl,
+          bet_type: betType,
+          matches_data: matchesData,
+          match_teams: matchTeams,
+          sport
+        }}
+      />
     </>
   );
 };
