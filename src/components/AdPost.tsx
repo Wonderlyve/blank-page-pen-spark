@@ -71,7 +71,7 @@ const AdPost = ({ ad }: AdPostProps) => {
   };
 
   return (
-    <Card className="w-full mb-4 relative overflow-hidden border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50/30 to-transparent dark:from-yellow-900/10">
+    <Card className="w-full mb-4 relative overflow-hidden bg-gradient-to-r from-yellow-50/30 to-transparent dark:from-yellow-900/10">
       <div className="absolute top-3 right-3">
         <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
           Sponsorisé
