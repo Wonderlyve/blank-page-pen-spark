@@ -52,7 +52,7 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
     prediction: match.pronostic || match.prediction || fallbackData.prediction,
     odds: match.odd || match.odds || fallbackData.odds,
     league: match.sport || match.league || fallbackData.sport,
-    time: match.time || match.heure || '20:00',
+    time: match.time || match.heure || '',
     // Récupération prioritaire du type de pari choisi par l'utilisateur
     betType: match.selectedBetType || match.betType || match.typeProno || match.type_pari || 
              match.typePari || match.bet_type || match.pariType || match.typeOfBet || 
@@ -73,7 +73,7 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
       prediction: predictionParts[index] || predictionParts[0] || predictionString,
       odds: oddsParts[index] || oddsParts[0] || oddsString,
       league: prediction.sport,
-      time: '20:00',
+      time: '',
       // Garder le type null si pas spécifié pour les matchs séparés
       betType: null,
     }));
@@ -127,7 +127,7 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
           prediction: prediction.prediction,
           odds: prediction.odds,
           league: prediction.sport,
-          time: '20:00',
+          time: '',
           // Utiliser le type de pari principal s'il existe
           betType: prediction.betType === 'simple' ? prediction.selectedBetType || null : null,
         },
@@ -138,6 +138,15 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
   const isMultipleBet =
     prediction.betType === 'combine' || prediction.betType === 'multiple' || matches.length > 1;
   const betTypeLabel = prediction.betType === 'combine' ? 'Pari Combiné' : 'Paris Multiples';
+
+  const formatMatchTime = (t: string) => {
+    if (!t) return '';
+    const d = new Date(t);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+    return t;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,7 +201,11 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
                     <div className="flex-1">
                       <p className="font-semibold text-sm mb-1">{match.teams}</p>
                       <p className="text-muted-foreground text-xs">
-                        ⚽ {match.league} • ⏰ {match.time}
+                        {match.time ? (
+                          <>⚽ {match.league} • ⏰ {formatMatchTime(match.time)}</>
+                        ) : (
+                          <>⚽ {match.league}</>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         🎯 Type :{' '}
