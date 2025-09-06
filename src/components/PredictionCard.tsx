@@ -65,6 +65,7 @@ interface PredictionCardProps {
     totalOdds?: string;
     reservationCode?: string;
     betType?: string;
+    match_time?: string; // Ajout du champ match_time
     matches?: Array<{
       id: string;
       teams: string;

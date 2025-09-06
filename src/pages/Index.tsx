@@ -238,8 +238,9 @@ const Index = () => {
     image: post.image_url,
     video: post.video_url,
     reservationCode: post.reservation_code,
-     betType: post.bet_type,
-     matches: post.matches_data ? JSON.parse(post.matches_data) : undefined,
+    betType: post.bet_type,
+    match_time: post.match_time, // Ajout du match_time pour l'affichage correct de l'heure
+    matches: post.matches_data ? JSON.parse(post.matches_data) : undefined,
     is_liked: post.is_liked || false
     };
   };
