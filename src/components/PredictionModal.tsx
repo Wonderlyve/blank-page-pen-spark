@@ -25,6 +25,7 @@ interface PredictionModalProps {
     totalOdds?: string;
     reservationCode?: string;
     betType?: string;
+    match_time?: string;
     matches?: Array<{
       id: string;
       teams: string;
@@ -190,7 +191,24 @@ const PredictionModal = ({ prediction, onClose }: PredictionModalProps) => {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="font-medium text-lg">{prediction.match}</div>
-                <div className="text-sm text-gray-500">{prediction.sport}</div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <span>{prediction.sport}</span>
+                  {prediction.match_time && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(prediction.match_time).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             

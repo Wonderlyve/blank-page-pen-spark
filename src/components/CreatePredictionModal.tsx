@@ -61,9 +61,9 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
     team2: '',
     prediction: '',
     odds: '',
-    league: '',
-    time: '',
-    betType: '1X2',
+      league: '',
+      time: '',
+      betType: '1X2',
     customBet: ''
   });
   
@@ -95,7 +95,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
       prediction: tempMatch.prediction,
       odds: tempMatch.odds,
       league: tempMatch.league || 'Non spécifié',
-      time: tempMatch.time || '00:00',
+      time: tempMatch.time || new Date().toISOString(),
       betType: tempMatch.betType || '1X2',
       customBet: tempMatch.customBet
     };
@@ -201,6 +201,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
           reservation_code: reservationCode || null,
           bet_type: betType,
           post_type: 'prediction',
+          match_time: validMatches[0].time ? new Date(validMatches[0].time).toISOString() : null,
           matches_data: matchesData ? JSON.stringify(matchesData) : null,
           image_file: selectedImage,
           video_file: selectedVideo
@@ -488,7 +489,8 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                           className="text-sm"
                         />
                         <Input
-                          placeholder="Heure (ex: 20:00)"
+                          type="datetime-local"
+                          placeholder="Date et heure du match"
                           value={tempMatch.time || ''}
                           onChange={(e) => updateTempMatch('time', e.target.value)}
                           className="text-sm"

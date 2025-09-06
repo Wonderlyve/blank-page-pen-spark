@@ -51,12 +51,25 @@ export function usePostComments(postId?: string) {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'comments',
+          filter: `post_id=eq.${postId}`
+        },
+        () => {
+          // Refetch comments count when comments are added/removed
+          fetchCommentsCount();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [postId]);
+  }, [postId, fetchCommentsCount]);
 
   return {
     commentsCount,
