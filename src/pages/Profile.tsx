@@ -295,24 +295,28 @@ const Profile = () => {
         <div className="text-center">
           <div className="relative inline-block mb-4">
             <img
-              src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+              src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profileUserId}`}
               alt="Profile"
               className="w-24 h-24 rounded-full border-4 border-white mx-auto"
             />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              className="hidden"
-              id="avatar-upload"
-            />
-            <Button
-              size="icon"
-              className="absolute bottom-0 right-0 w-8 h-8 bg-white text-gray-600 hover:bg-gray-100 rounded-full shadow-lg"
-              onClick={() => document.getElementById('avatar-upload')?.click()}
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
+            {isOwnProfile && (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  id="avatar-upload"
+                />
+                <Button
+                  size="icon"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-white text-gray-600 hover:bg-gray-100 rounded-full shadow-lg"
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
+              </>
+            )}
           </div>
           
           <div className="text-white">
@@ -371,28 +375,32 @@ const Profile = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="pb-4">
-        <Button
-          onClick={() => navigate(`/my-briefings${profileUserId ? `?userId=${profileUserId}` : ''}`)}
-          className="w-full bg-black hover:bg-gray-800 text-white rounded-none"
-        >
-          <Video className="w-4 h-4 mr-2" />
-          Voir mes videos
-        </Button>
-      </div>
+      {isOwnProfile && (
+        <div className="pb-4">
+          <Button
+            onClick={() => navigate(`/my-briefings${profileUserId ? `?userId=${profileUserId}` : ''}`)}
+            className="w-full bg-black hover:bg-gray-800 text-white rounded-none"
+          >
+            <Video className="w-4 h-4 mr-2" />
+            Voir mes videos
+          </Button>
+        </div>
+      )}
 
       {/* Tabs Section */}
       <div className="p-4">
         <Tabs defaultValue="activity" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="activity" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
               <BarChart3 className="w-4 h-4 mr-2" />
               Activité
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              <Heart className="w-4 h-4 mr-2" />
-              Favoris
-            </TabsTrigger>
+            {isOwnProfile && (
+              <TabsTrigger value="favorites" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
+                <Heart className="w-4 h-4 mr-2" />
+                Favoris
+              </TabsTrigger>
+            )}
             <TabsTrigger value="followers" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
               <Users className="w-4 h-4 mr-2" />
               Abonnés
@@ -468,7 +476,8 @@ const Profile = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="favorites" className="mt-4">
+          {isOwnProfile && (
+            <TabsContent value="favorites" className="mt-4">
             <Card>
               <CardHeader>
                 <CardTitle>Pronostics favoris</CardTitle>
@@ -535,7 +544,8 @@ const Profile = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
+          )}
           
           <TabsContent value="followers" className="mt-4">
             <FollowersListView userId={profileUserId || ''} />
