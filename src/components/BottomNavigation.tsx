@@ -1,5 +1,5 @@
 
-import { Home, Video, User, Plus, Crown } from 'lucide-react';
+import { Home, Video, Plus, Crown, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -85,7 +85,7 @@ const BottomNavigation = () => {
     { icon: Crown, label: 'Canaux', active: false, action: () => navigate('/channels'), hasNotification: unreadChannelCount > 0, notificationCount: unreadChannelCount },
     { icon: Plus, label: '', active: false, action: handleCreateClick, isCenter: true },
     { icon: Video, label: 'Briefing', active: false, action: () => navigate('/brief') },
-    { icon: User, label: 'Profil', active: false, action: handleProfileClick },
+    { icon: Sparkles, label: 'Expert', active: false, action: () => navigate('/expert') },
   ];
 
   return (

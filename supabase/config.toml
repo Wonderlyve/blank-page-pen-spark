@@ -119,3 +119,6 @@ verify_jwt = false
 
 [functions.expert-advice]
 verify_jwt = true
+
+[functions.expert-composition]
+verify_jwt = true

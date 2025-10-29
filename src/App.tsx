@@ -33,6 +33,7 @@ import Story from "./pages/Story";
 import Ads from "./pages/Ads";
 import AdLanding from "./pages/AdLanding";
 import SmartFeed from "./pages/SmartFeed";
+import Expert from "./pages/Expert";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/smart-feed" element={<SmartFeed />} />
+              <Route path="/expert" element={<Expert />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-briefings" element={<MyBriefings />} />
               <Route path="/channels" element={<Channels />} />
