@@ -1,10 +1,11 @@
 
-import { Calendar, Clock, Trophy } from 'lucide-react';
+import { Calendar, Clock, Trophy, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import MultipleBetModal from '@/components/MultipleBetModal';
+import { ExpertAdviceSheet } from '@/components/ExpertAdviceSheet';
 
 interface PredictionModalProps {
   prediction: {
@@ -41,6 +42,7 @@ interface PredictionModalProps {
 
 const PredictionModal = ({ prediction, onClose }: PredictionModalProps) => {
   const [showMultipleBetModal, setShowMultipleBetModal] = useState(false);
+  const [showExpertAdvice, setShowExpertAdvice] = useState(false);
 
   const isMultipleBet = prediction.betType === 'combine' || prediction.betType === 'multiple' || (prediction.matches && prediction.matches.length > 1);
   const isLoto = prediction.betType === 'loto' || prediction.sport === 'Loto';
@@ -137,7 +139,22 @@ const PredictionModal = ({ prediction, onClose }: PredictionModalProps) => {
               </div>
             </div>
           </div>
+
+          {/* Bouton Conseil d'expert */}
+          <Button
+            onClick={() => setShowExpertAdvice(true)}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Conseil d'Expert IA
+          </Button>
         </div>
+
+        <ExpertAdviceSheet
+          open={showExpertAdvice}
+          onOpenChange={setShowExpertAdvice}
+          predictionData={prediction}
+        />
       </ScrollArea>
     );
   }
@@ -272,7 +289,22 @@ const PredictionModal = ({ prediction, onClose }: PredictionModalProps) => {
             </div>
           </div>
         </div>
+
+        {/* Bouton Conseil d'expert */}
+        <Button
+          onClick={() => setShowExpertAdvice(true)}
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+        >
+          <Sparkles className="w-4 h-4 mr-2" />
+          Conseil d'Expert IA
+        </Button>
       </div>
+
+      <ExpertAdviceSheet
+        open={showExpertAdvice}
+        onOpenChange={setShowExpertAdvice}
+        predictionData={prediction}
+      />
     </ScrollArea>
   );
 };

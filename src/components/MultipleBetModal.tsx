@@ -1,6 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
+import { ExpertAdviceSheet } from '@/components/ExpertAdviceSheet';
+import { useState } from 'react';
 
 interface Match {
   id: string;
@@ -40,6 +44,8 @@ interface MultipleBetModalProps {
 }
 
 const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalProps) => {
+  const [showExpertAdvice, setShowExpertAdvice] = useState(false);
+  
   // Normalisation d'un match individuel
   const normalizeMatch = (match: any, index: number, fallbackData: any) => ({
     id: match.id || `match-${index}`,
@@ -283,9 +289,24 @@ const MultipleBetModal = ({ open, onOpenChange, prediction }: MultipleBetModalPr
                 </div>
               </div>
             </div>
+
+            {/* Bouton Conseil d'expert */}
+            <Button
+              onClick={() => setShowExpertAdvice(true)}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Conseil d'Expert IA
+            </Button>
           </div>
         </div>
       </DialogContent>
+
+      <ExpertAdviceSheet
+        open={showExpertAdvice}
+        onOpenChange={setShowExpertAdvice}
+        predictionData={prediction}
+      />
     </Dialog>
   );
 };
